@@ -1,0 +1,266 @@
+# MusiCoT Training Configuration
+# =============================
+
+# Experiment settings
+experiment:
+  project_name: "musicot"
+  experiment_name: "musicot_v1_baseline"
+  checkpoint_dir: "./checkpoints"
+  log_dir: "./logs"
+  use_wandb: true
+
+# Dataset configuration
+data:
+  # Training data paths
+  train_audio_dir: "/path/to/disco10m/audio"
+  train_metadata_file: "/path/to/disco10m/metadata.json"
+  
+  # Validation data
+  val_audio_dir: "/path/to/validation/audio"
+  val_metadata_file: "/path/to/validation/metadata.json"
+  
+  # Data processing
+  max_audio_length: 30.0  # seconds
+  sample_rate: 44100
+  segment_length: 30.0
+  overlap_ratio: 0.25
+  
+  # Text processing
+  max_text_length: 512
+  max_lyrics_length: 1024
+  
+  # Data loading
+  num_workers: 8
+  pin_memory: true
+
+# Audio processing configuration
+audio:
+  sample_rate: 44100
+  segment_length: 30.0
+  hop_length: 512
+  n_fft: 2048
+  n_mels: 128
+  use_demucs_separation: true
+  demucs_model: "htdemucs_6s"
+
+# CLAP model configuration
+clap:
+  embed_dim: 512
+  audio_length: 10.0  # 10-second segments for CLAP
+  sample_rate: 48000
+  text_encoder: "roberta-base"
+  audio_encoder: "HTSAT"
+  pretrained_checkpoint: null  # Path to pretrained CLAP if available
+
+# RVQ (Residual Vector Quantization) configuration
+rvq:
+  num_quantizers: 8
+  codebook_size: 1024
+  commitment_weight: 0.25
+  entropy_weight: 0.01
+
+# Semantic Language Model configuration
+semantic_lm:
+  model_name: "meta-llama/Llama-2-7b-hf"
+  vocab_size_extension: 10000
+  max_sequence_length: 4096
+  use_gradient_checkpointing: true
+  
+  # Model parallelism (for large models)
+  model_parallel: false
+  tensor_parallel_size: 1
+
+# Training configuration
+training:
+  # Basic training settings
+  num_epochs: 100
+  batch_size: 8
+  gradient_accumulation_steps: 4
+  effective_batch_size: 32  # batch_size * gradient_accumulation_steps
+  
+  # Learning rates
+  lr_semantic: 1e-4
+  lr_rvq: 5e-4
+  lr_clap: 1e-5  # Lower LR if fine-tuning pretrained CLAP
+  
+  # Optimization
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  warmup_steps: 1000
+  
+  # Mixed precision training
+  mixed_precision: true
+  
+  # Logging and saving
+  log_interval: 100
+  save_interval: 5
+  eval_interval: 1
+  
+  # Advanced training settings
+  use_ema: false  # Exponential Moving Average
+  ema_decay: 0.9999
+  compile_model: false  # PyTorch 2.0 compilation
+
+# Loss function configuration
+loss:
+  ce_weight: 1.0
+  commitment_weight: 0.25
+  diversity_weight: 0.1
+  perplexity_weight: 0.0  # Optional perplexity regularization
+
+# Sampling configuration (for inference and evaluation)
+sampling:
+  # Dual-temperature sampling
+  cot_temperature: 0.65
+  audio_temperature: 0.75
+  
+  # Dual-scale Classifier-Free Guidance
+  cfg_lambda1: 2.3  # CFG scale for CoT tokens
+  cfg_lambda2: 1.3  # CFG scale for audio tokens
+  
+  # Standard sampling parameters
+  top_k: 50
+  top_p: 0.9
+  repetition_penalty: 1.1
+  
+  # Generation parameters
+  max_new_tokens: 2048
+  min_new_tokens: 512
+  do_sample: true
+
+# Music Information Retrieval (MIR) configuration
+mir:
+  # Genre classification
+  use_genre_tags: true
+  genre_model_path: "/path/to/genre/classifier"
+  
+  # Instrument recognition
+  use_instrument_tags: true
+  instrument_model_path: "/path/to/instrument/classifier"
+  
+  # Mood classification
+  use_mood_tags: true
+  mood_model_path: "/path/to/mood/classifier"
+  
+  # Energy/tempo analysis
+  use_energy_tags: true
+  
+  # Similarity threshold for tag filtering
+  similarity_threshold: 0.5
+
+# Evaluation configuration
+evaluation:
+  # Metrics to compute
+  compute_fad: true
+  compute_clap_score: true
+  compute_audiobox_metrics: true
+  compute_musicality_scores: true
+  
+  # Reference datasets for evaluation
+  reference_dataset: "musdb18_hq"
+  reference_data_path: "/path/to/musdb18_hq"
+  
+  # Generation settings for evaluation
+  num_eval_samples: 100
+  eval_audio_length: 30.0
+  
+  # Professional evaluation (if available)
+  use_human_evaluation: false
+  num_human_evaluators: 10
+
+# Diffusion model configuration (for acoustic generation)
+diffusion:
+  model_type: "stable_audio"
+  pretrained_checkpoint: "/path/to/stable_audio/checkpoint"
+  
+  # Training settings (if training diffusion model)
+  train_diffusion: false
+  diffusion_steps: 1000
+  noise_schedule: "cosine"
+  
+  # Inference settings
+  inference_steps: 50
+  guidance_scale: 7.5
+
+# Model analysis configuration
+analysis:
+  # Structure analysis
+  analyze_structure: true
+  structure_anchors:
+    instruments: ["vocals", "bass", "drums", "guitar", "piano", "strings", "brass", "synth"]
+    moods: ["happy", "sad", "energetic", "calm", "aggressive", "peaceful"]
+    genres: ["rock", "pop", "jazz", "classical", "electronic", "hip_hop"]
+  
+  # Correlation analysis with Demucs separation
+  use_demucs_correlation: true
+  correlation_threshold: 0.5
+
+# Hardware and performance configuration
+hardware:
+  # GPU settings
+  device: "cuda"
+  mixed_precision: true
+  compile_model: false
+  
+  # Memory optimization
+  gradient_checkpointing: true
+  cpu_offload: false
+  
+  # Distributed training
+  use_distributed: false
+  world_size: 1
+  
+  # Data loading optimization
+  dataloader_num_workers: 8
+  prefetch_factor: 2
+
+# Monitoring and debugging
+monitoring:
+  # Weights & Biases
+  wandb_project: "musicot"
+  wandb_entity: null
+  
+  # TensorBoard
+  use_tensorboard: true
+  
+  # Model inspection
+  log_model_parameters: true
+  log_gradients: false
+  log_activations: false
+  
+  # Performance monitoring
+  profile_training: false
+  memory_profiling: false
+
+# Data augmentation (optional)
+augmentation:
+  use_augmentation: false
+  
+  # Audio augmentations
+  pitch_shift_range: [-2, 2]  # semitones
+  time_stretch_range: [0.9, 1.1]
+  noise_level: 0.01
+  
+  # Text augmentations
+  paraphrase_probability: 0.1
+  synonym_replacement: 0.05
+
+# Advanced features
+advanced:
+  # Music referencing
+  enable_music_referencing: true
+  reference_length_range: [5.0, 15.0]
+  
+  # Progressive training
+  use_progressive_training: false
+  progressive_stages: [8, 16, 24, 30]  # sequence lengths
+  
+  # Curriculum learning
+  use_curriculum: false
+  curriculum_schedule: "linear"
+  
+  # Knowledge distillation
+  use_distillation: false
+  teacher_model_path: null
+  distillation_alpha: 0.5
+  distillation_temperature: 4.0
